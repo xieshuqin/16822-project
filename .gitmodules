@@ -1,0 +1,3 @@
+[submodule "DEKR"]
+	path = DEKR
+	url = git@github.com:HRNet/DEKR.git
