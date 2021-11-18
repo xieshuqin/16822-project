@@ -6,4 +6,6 @@
 
 
 ## Installation
+```
 git clone --recurse-submodules git@github.com:xieshuqin/16822-project.git
+```
