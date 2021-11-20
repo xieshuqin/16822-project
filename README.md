@@ -12,4 +12,7 @@ pip install -r requirements.txt
 pushd CrowdPose/crowdpose-api/PythonAPI
 python setup.py install --user
 popd
+
+# Installation for EpipolarPose
+Follow the steps in https://github.com/mkocabas/EpipolarPose to setup the environment and the related data.
 ```
