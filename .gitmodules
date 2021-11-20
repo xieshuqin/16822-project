@@ -4,3 +4,6 @@
 [submodule "EpipolarPose"]
 	path = EpipolarPose
 	url = git@github.com:mkocabas/EpipolarPose.git
+[submodule "CrowdPose"]
+	path = CrowdPose
+	url = git@github.com:Jeff-sjtu/CrowdPose.git

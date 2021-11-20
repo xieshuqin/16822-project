@@ -8,4 +8,8 @@
 ## Installation
 ```
 git clone --recurse-submodules git@github.com:xieshuqin/16822-project.git
+pip install -r requirements.txt
+pushd CrowdPose/crowdpose-api/PythonAPI
+python setup.py install --user
+popd
 ```
