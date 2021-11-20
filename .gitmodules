@@ -7,3 +7,6 @@
 [submodule "CrowdPose"]
 	path = CrowdPose
 	url = git@github.com:Jeff-sjtu/CrowdPose.git
+[submodule "deep-person-reid"]
+	path = deep-person-reid
+	url = git@github.com:KaiyangZhou/deep-person-reid.git
