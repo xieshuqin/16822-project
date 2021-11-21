@@ -10,3 +10,6 @@
 [submodule "deep-person-reid"]
 	path = deep-person-reid
 	url = git@github.com:KaiyangZhou/deep-person-reid.git
+[submodule "panoptic-toolbox"]
+	path = panoptic-toolbox
+	url = git@github.com:CMU-Perceptual-Computing-Lab/panoptic-toolbox.git
