@@ -15,4 +15,5 @@ popd
 
 # Installation for EpipolarPose
 Follow the steps in https://github.com/mkocabas/EpipolarPose to setup the environment and the related data.
+pip install h5py
 ```
