@@ -211,7 +211,7 @@ def ransac_triangulaton(poses_2d, camera_matrices, threshold=20):
             fig = plt.figure(figsize=(12, 7))
             ax = fig.add_subplot(projection='3d')
             show3Dpose(cur_joints_3Dpts, ax, radius=128)
-            plt.savefig('combination_' + str(combination[0]) + ',' + str(combination[1]) + str('_triangulate.png'))
+            plt.savefig('combination_' + str(combination[0]) + ',' + str(combination[1]) + str('_triangulate.jpg'))
 
         #Back project to the 2D poses
         cur_joints_4Dpts = np.hstack((cur_joints_3Dpts, np.ones((1,16)).T))
@@ -260,7 +260,7 @@ def ransac_triangulaton(poses_2d, camera_matrices, threshold=20):
             best_combination = combination
 
     #import pdb; pdb.set_trace()
-    return best_combination
+    return best_joints_3Dpts
 
 
 '''
