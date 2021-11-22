@@ -72,7 +72,7 @@ def readAndGenerateCameraMatrice(camera_json_path):
         camera_dict = json.loads(f.read())
     camera_matrices = []
     
-    for i in range(1,5):
+    for i in range(0,4):
         idx = str(i)
         R = np.array(camera_dict[idx]['R'])
         t = np.array(camera_dict[idx]['t']).reshape(3,1)
@@ -86,21 +86,185 @@ def readAndGenerateCameraMatrice(camera_json_path):
         camera_matrices.append(M)
     return camera_matrices
 
-#input: list of dictionary 
-def ransac_triangulaton(poses_2d, camera_matrices, threshold=0.5):
+
+# Initialize consts to be used in iterative_LS_triangulation()
+iterative_LS_triangulation_C = -np.eye(2, 3)
+def iterative_LS_triangulation(u1, P1, u2, P2, tolerance=3.e-5):
+    """
+    Iterative (Linear) Least Squares based triangulation.
+    From "Triangulation", Hartley, R.I. and Sturm, P., Computer vision and image understanding, 1997.
+    Relative speed: 0.025
+
+    (u1, P1) is the reference pair containing normalized image coordinates (x, y) and the corresponding camera matrix.
+    (u2, P2) is the second pair.
+    "tolerance" is the depth convergence tolerance.
+
+    Additionally returns a status-vector to indicate outliers:
+        1: inlier, and in front of both cameras
+        0: outlier, but in front of both cameras
+        -1: only in front of second camera
+        -2: only in front of first camera
+        -3: not in front of any camera
+    Outliers are selected based on non-convergence of depth, and on negativity of depths (=> behind camera(s)).
+
+    u1 and u2 are matrices: amount of points equals #rows and should be equal for u1 and u2.
+    """
+    #convert into numpy for calculation
+    u1, u2 = np.array(u1), np.array(u2)
+
+    A = np.zeros((4, 3))
+    b = np.zeros((4, 1))
+
+    # Create array of triangulated points
+    x = np.empty((4, len(u1)))
+    x[3, :].fill(1)  # create empty array of homogenous 3D coordinates
+    x_status = np.empty(len(u1), dtype=int)
+
+    # Initialize C matrices
+    C1 = np.array(iterative_LS_triangulation_C)
+    C2 = np.array(iterative_LS_triangulation_C)
+
+    for xi in range(len(u1)):
+        #import pdb; pdb.set_trace()
+        # Build C matrices, to construct A and b in a concise way
+        C1[:, 2] = u1[xi, :]
+        C2[:, 2] = u2[xi, :]
+
+        # Build A matrix
+        A[0:2, :] = C1.dot(P1[0:3, 0:3])  # C1 * R1
+        A[2:4, :] = C2.dot(P2[0:3, 0:3])  # C2 * R2
+
+        # Build b vector
+        b[0:2, :] = C1.dot(P1[0:3, 3:4])  # C1 * t1
+        b[2:4, :] = C2.dot(P2[0:3, 3:4])  # C2 * t2
+        b *= -1
+
+        # Init depths
+        d1 = d2 = 1.
+
+        for i in range(10):  # Hartley suggests 10 iterations at most
+            # Solve for x vector
+            cv2.solve(A, b, x[0:3, xi:xi + 1], cv2.DECOMP_SVD)
+
+            # Calculate new depths
+            d1_new = P1[2, :].dot(x[:, xi])
+            d2_new = P2[2, :].dot(x[:, xi])
+
+            if abs(d1_new - d1) <= tolerance and \
+                            abs(d2_new - d2) <= tolerance:
+                break
+
+            # Re-weight A matrix and b vector with the new depths
+            A[0:2, :] *= 1 / d1_new
+            A[2:4, :] *= 1 / d2_new
+            b[0:2, :] *= 1 / d1_new
+            b[2:4, :] *= 1 / d2_new
+
+            # Update depths
+            d1 = d1_new
+            d2 = d2_new
+
+        # Set status
+        x_status[xi] = (i < 10 and  # points should have converged by now
+                        (d1_new > 0 and d2_new > 0))  # points should be in front of both cameras
+        if d1_new <= 0: x_status[xi] -= 1
+        if d2_new <= 0: x_status[xi] -= 2
+
+    return x[0:3, :].T.astype(np.float32), x_status
+
+#input: list of poses [pose_0, pose_1, …, pose_n]  -- Each pose: [(x1, y1), (x2, y2), …, (xm, ym)] for m joints
+#       list of camera matrices - [cam1, cam2, cam3, cam4] -- each camaera is a numpy array 3x4
+def ransac_triangulaton(poses_2d, camera_matrices, threshold=20):
+    debug = True
+
+    #init 
+    best_joints_3Dpts = None
+    best_joint_inliers = 0
+    best_errors = float("inf")
+    best_combination = None
     
-    #Per point triangulate?
-    return
+    #Generate all the combinations
+    camera_num = len(camera_matrices)
+    all_camera_combinations = []
+    for i in range(camera_num):
+        for j in range(i + 1, camera_num):
+            all_camera_combinations.append([i,j])
+
+    #debug
+    if debug:
+        all_errors = []
+        all_inlier_num = []
+    
+    #Pick a combination of 2 cameras to triangulate points
+    for combination in all_camera_combinations:
+        #init
+        M1, M2  = camera_matrices[combination[0]], camera_matrices[combination[1]]
+        pose1, pose2 = poses_2d[combination[0]], poses_2d[combination[1]]
+        cur_joint_inliers = 0
+        cur_allCam_erros = 0
+
+        #Triangulate the points
+        cur_joints_3Dpts, vis = iterative_LS_triangulation(pose1, M1, pose2, M2)
+        #cur_joints_3Dpts = triangulate_cv2(pose1, M1, pose2, M2)
+
+        if debug:
+            fig = plt.figure(figsize=(12, 7))
+            ax = fig.add_subplot(projection='3d')
+            show3Dpose(cur_joints_3Dpts, ax, radius=128)
+            plt.savefig('combination_' + str(combination[0]) + ',' + str(combination[1]) + str('_triangulate.png'))
+
+        #Back project to the 2D poses
+        cur_joints_4Dpts = np.hstack((cur_joints_3Dpts, np.ones((1,16)).T))
+        for cam_idx in range(len(camera_matrices)):
+            #Debug 
+            if debug:
+                img = cv2.imread(str(cam_idx) + '.jpg')
+            
+            cur_cam_error = 0
+            #Per joint comparison
+            for joint_idx in range(len(cur_joints_4Dpts)):
+                projected_2Dpt = camera_matrices[cam_idx] @ cur_joints_4Dpts[joint_idx] # M @ joint
+                projected_2Dpt = projected_2Dpt/projected_2Dpt[2] #Normalized to homo. coordinates
+
+                #Calculate the Euclidean distance and use that as the error/diff
+                dist = np.linalg.norm(projected_2Dpt[:2] - np.array(poses_2d[cam_idx][joint_idx])) #the projected point - the pose estimated point
+
+                #Increase inliner number if projected joint has Euclidean distance smaller than the threshold (with the estimated pose joint)
+                if (dist < threshold):
+                    cur_joint_inliers += 1
+
+                cur_cam_error += dist
+        
+                #debug
+                if debug:
+                    x = projected_2Dpt[0]
+                    y = projected_2Dpt[1]
+                    img = cv2.circle(np.array(img), (int(x),int(y)) ,5, (0,0,255), 5)
+
+            #Accumulate the error for all the cameras (in this case: 4 cameras)
+            cur_allCam_erros += cur_cam_error
+
+            #debug
+            if debug:
+                cv2.imwrite('combination_' + str(combination[0]) + ',' + str(combination[1]) + '_cam' + str(cam_idx) + '_back_projected.jpg', img)
+                all_inlier_num.append(cur_joint_inliers)
+
+        all_errors.append(cur_allCam_erros)
+        
+        
+        #Record the best triangulation
+        if (cur_joint_inliers > best_joint_inliers): ##or (cur_joint_inliers == best_joint_inliers and cur_allCam_erros < best_errors)):
+            best_errors = cur_allCam_erros
+            best_joints_3Dpts = cur_joints_3Dpts
+            best_joint_inliers = cur_joint_inliers
+            best_combination = combination
+
+    #import pdb; pdb.set_trace()
+    return best_combination
 
 
 '''
-Q3.3.2: Triangulate a set of 2D coordinates in the image to a set of 3D points.
-    Input:  C1, the 3x4 camera matrix
-            pts1, the Nx2 matrix with the 2D image coordinates per row
-            C2, the 3x4 camera matrix
-            pts2, the Nx2 matrix with the 2D image coordinates per row
-    Output: P, the Nx3 matrix with the corresponding 3D points per row
-            err, the reprojection error.
+From 16720 HW
 '''
 def triangulate(pts1, C1, pts2, C2):
     # Replace pass by your implementation
@@ -144,9 +308,17 @@ def triangulate_cv2(pts1, C1, pts2, C2):
 
 if __name__ == '__main__':
     camera_matrices = readAndGenerateCameraMatrice('subject1_camera.json')
-    poses = readPoses('pose1.pickle','pose2.pickle','pose3.pickle','pose4.pickle')
+    poses = readPoses('pose0.pickle','pose1.pickle','pose2.pickle','pose3.pickle')
+    #import pdb; pdb.set_trace()
+    #P, status = iterative_LS_triangulation(poses[0], camera_matrices[0], poses[3], camera_matrices[3])
+    #P, status = iterative_LS_triangulation(poses[2], camera_matrices[2], poses[3], camera_matrices[3])
+    #P = triangulate(poses[1], camera_matrices[1], poses[3], camera_matrices[3])
     #P = triangulate_cv2(poses[1], camera_matrices[1], poses[3], camera_matrices[3])
     #P = triangulate_cv2(poses[0], camera_matrices[0], poses[2], camera_matrices[2])
+
+    ransac_triangulaton(poses, camera_matrices) 
+    with open('P.pickle', 'wb') as handle:
+        pickle.dump(P, handle)
 
     fig = plt.figure(figsize=(12, 7))
     ax = fig.add_subplot(projection='3d')
