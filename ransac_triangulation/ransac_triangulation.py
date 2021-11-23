@@ -76,17 +76,21 @@ def readAndGenerateCameraMatrice(camera_json_path):
         idx = str(i)
         R = np.array(camera_dict[idx]['R'])
         t = np.array(camera_dict[idx]['t']).reshape(3,1)
-        Rt = np.concatenate((R, t), axis=1)
+        
+        #Rt = np.concatenate((R, t), axis=1)
+        _Rt = -R @t 
+        newExtrinsic = np.concatenate((R, _Rt), axis=1)
 
         f = camera_dict[idx]['f']
         c = camera_dict[idx]['c']
         K = np.array([[f[0],0,c[0]], [0 , f[1], c[1]], [0,0,1]])
 
-        M = K @ Rt
+        #M = K @ Rt
+        M = K @ newExtrinsic
         camera_matrices.append(M)
 
-    idx=[3,2,0,1]
-    camera_matrices=[camera_matrices[i]for i in idx]
+    #idx=[3,2,0,1]
+    #camera_matrices=[camera_matrices[i]for i in idx]
     return camera_matrices
 
 
@@ -207,8 +211,8 @@ def ransac_triangulaton(poses_2d, camera_matrices, threshold=20):
         cur_allCam_erros = 0
 
         #Triangulate the points
-        #cur_joints_3Dpts, vis = iterative_LS_triangulation(pose1, M1, pose2, M2)
-        cur_joints_3Dpts = triangulate_cv2(pose1, M1, pose2, M2)
+        cur_joints_3Dpts, vis = iterative_LS_triangulation(pose1, M1, pose2, M2)
+        #cur_joints_3Dpts = triangulate_cv2(pose1, M1, pose2, M2)
 
         if debug:
             fig = plt.figure(figsize=(12, 7))
