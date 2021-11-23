@@ -217,6 +217,9 @@ def ransac_triangulaton(poses_2d, camera_matrices, threshold=20):
         if debug:
             fig = plt.figure(figsize=(12, 7))
             ax = fig.add_subplot(projection='3d')
+            ax.set_xlim3d(-2000, 2000)
+            ax.set_ylim3d(-2000, 2000)
+            ax.set_zlim3d(-2000, 2000)
             show3Dpose(cur_joints_3Dpts, ax, radius=128)
             plt.savefig('combination_' + str(combination[0]) + ',' + str(combination[1]) + str('_triangulate.jpg'))
 
