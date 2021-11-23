@@ -84,6 +84,9 @@ def readAndGenerateCameraMatrice(camera_json_path):
 
         M = K @ Rt
         camera_matrices.append(M)
+
+    idx=[3,2,0,1]
+    camera_matrices=[camera_matrices[i]for i in idx]
     return camera_matrices
 
 
@@ -204,8 +207,8 @@ def ransac_triangulaton(poses_2d, camera_matrices, threshold=20):
         cur_allCam_erros = 0
 
         #Triangulate the points
-        cur_joints_3Dpts, vis = iterative_LS_triangulation(pose1, M1, pose2, M2)
-        #cur_joints_3Dpts = triangulate_cv2(pose1, M1, pose2, M2)
+        #cur_joints_3Dpts, vis = iterative_LS_triangulation(pose1, M1, pose2, M2)
+        cur_joints_3Dpts = triangulate_cv2(pose1, M1, pose2, M2)
 
         if debug:
             fig = plt.figure(figsize=(12, 7))
@@ -241,6 +244,14 @@ def ransac_triangulaton(poses_2d, camera_matrices, threshold=20):
                     y = projected_2Dpt[1]
                     img = cv2.circle(np.array(img), (int(x),int(y)) ,5, (0,0,255), 5)
 
+                #Special debug
+                #if combination[0] == 1 and combination[1] == 3 and cam_idx == 1:
+                #    x = projected_2Dpt[0]
+                #    y = projected_2Dpt[1]
+                #    print("x: %d y: %d", x,y)
+                #    import pdb; pdb.set_trace()
+                    
+
             #Accumulate the error for all the cameras (in this case: 4 cameras)
             cur_allCam_erros += cur_cam_error
 
@@ -259,7 +270,7 @@ def ransac_triangulaton(poses_2d, camera_matrices, threshold=20):
             best_joint_inliers = cur_joint_inliers
             best_combination = combination
 
-    #import pdb; pdb.set_trace()
+    import pdb; pdb.set_trace()
     return best_joints_3Dpts
 
 
@@ -317,10 +328,11 @@ if __name__ == '__main__':
     #P = triangulate_cv2(poses[0], camera_matrices[0], poses[2], camera_matrices[2])
 
     ransac_triangulaton(poses, camera_matrices) 
-    with open('P.pickle', 'wb') as handle:
-        pickle.dump(P, handle)
 
-    fig = plt.figure(figsize=(12, 7))
-    ax = fig.add_subplot(projection='3d')
-    show3Dpose(P, ax, radius=128)
-    plt.savefig('triangulate.png')
+    #with open('P.pickle', 'wb') as handle:
+    #    pickle.dump(P, handle)
+
+    #fig = plt.figure(figsize=(12, 7))
+    #ax = fig.add_subplot(projection='3d')
+    #show3Dpose(P, ax, radius=128)
+    #plt.savefig('triangulate.png')
