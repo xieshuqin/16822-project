@@ -61,6 +61,11 @@ def readPoses(pose1_json_path, pose2_json_path, pose3_json_path, pose4_json_path
     with open(pose4_json_path, 'rb') as handle:
         pose4 = pickle.load(handle)
 
+    import random
+    for i in range(len(pose1)):
+        pose1[i][0] += random.randint(10,100)
+        pose1[i][1] += random.randint(10,100)
+        
     poses.append(pose1)
     poses.append(pose2)
     poses.append(pose3)
@@ -181,8 +186,9 @@ def iterative_LS_triangulation(u1, P1, u2, P2, tolerance=3.e-5):
 
 #input: list of poses [pose_0, pose_1, …, pose_n]  -- Each pose: [(x1, y1), (x2, y2), …, (xm, ym)] for m joints
 #       list of camera matrices - [cam1, cam2, cam3, cam4] -- each camaera is a numpy array 3x4
-def ransac_triangulaton(poses_2d, camera_matrices, threshold=20):
-    debug = True
+def ransac_triangulaton(poses_2d, camera_matrices, threshold=10):
+    #If set to true, will output the images of the back-projections etc.
+    debug = False
 
     #init 
     best_joints_3Dpts = None
@@ -248,14 +254,6 @@ def ransac_triangulaton(poses_2d, camera_matrices, threshold=20):
                     y = projected_2Dpt[1]
                     img = cv2.circle(np.array(img), (int(x),int(y)) ,5, (0,0,255), 5)
 
-                #Special debug
-                #if combination[0] == 1 and combination[1] == 3 and cam_idx == 1:
-                #    x = projected_2Dpt[0]
-                #    y = projected_2Dpt[1]
-                #    print("x: %d y: %d", x,y)
-                #    import pdb; pdb.set_trace()
-                    
-
             #Accumulate the error for all the cameras (in this case: 4 cameras)
             cur_allCam_erros += cur_cam_error
 
@@ -263,18 +261,18 @@ def ransac_triangulaton(poses_2d, camera_matrices, threshold=20):
             if debug:
                 cv2.imwrite('combination_' + str(combination[0]) + ',' + str(combination[1]) + '_cam' + str(cam_idx) + '_back_projected.jpg', img)
                 all_inlier_num.append(cur_joint_inliers)
+        
+        #for recording messages for debug
+        if debug:
+            all_errors.append(cur_allCam_erros)
 
-        all_errors.append(cur_allCam_erros)
-        
-        
         #Record the best triangulation
-        if (cur_joint_inliers > best_joint_inliers): ##or (cur_joint_inliers == best_joint_inliers and cur_allCam_erros < best_errors)):
+        if (cur_joint_inliers > best_joint_inliers or (cur_joint_inliers == best_joint_inliers and cur_allCam_erros < best_errors)):
             best_errors = cur_allCam_erros
             best_joints_3Dpts = cur_joints_3Dpts
             best_joint_inliers = cur_joint_inliers
             best_combination = combination
 
-    import pdb; pdb.set_trace()
     return best_joints_3Dpts
 
 
