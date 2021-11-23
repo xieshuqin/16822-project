@@ -60,11 +60,6 @@ def readPoses(pose1_json_path, pose2_json_path, pose3_json_path, pose4_json_path
         pose3 = pickle.load(handle)
     with open(pose4_json_path, 'rb') as handle:
         pose4 = pickle.load(handle)
-
-    import random
-    for i in range(len(pose1)):
-        pose1[i][0] += random.randint(10,100)
-        pose1[i][1] += random.randint(10,100)
         
     poses.append(pose1)
     poses.append(pose2)
