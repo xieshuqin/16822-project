@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 from pose2d import create_2d_pose_model, infer_2d_pose, pose_to_bbox
-#from reid import create_reid_model, reid_people
+from reid import create_reid_model, reid_people
 import os
 #from single_pose3d import ransac_triangulation
 from IPython import embed
@@ -38,25 +38,28 @@ class CMUPanopticDataset(torch.utils.data.Dataset):
             M.append(self.calib[c]['M'])
             distCoef.append(self.calib[c]['distCoef'])
             images.append(cv2.imread(self.images[c][index]))
-        return {'M': M, 'distCoef': distCoef, 'images': images}
+        return {'camera_matrices': M, 'distCoef': distCoef, 'images': images}
 
 
 def main():
     dataset = CMUPanopticDataset(
         'panoptic-toolbox/171204_pose1_sample', ['00_16', '00_21'])
-    embed()
+    dataloader = torch.utils.data.DataLoader(dataset)
     pose_model = create_2d_pose_model()
     reid_model = create_reid_model()
 
     for blob_in in dataloader:
-        images = blob_in['images']
-        camera_matrices = blob_in['camera_matrices']
+        images = [i[0] for i in blob_in['images']]
+        camera_matrices = [m[0] for m in blob_in['camera_matrices']]
 
         # run 2d pose estimation
         poses_2d = []
         bboxes = []
         for image in images:
-            poses_2d_one_image = infer_2d_pose(pose_model, image)
+            poses_2d_one_image = infer_2d_pose(
+                pose_model, image.numpy()[:, :, ::-1])
+            embed()
+            exit()
             poses_2d.append(poses_2d_one_image)
             bboxes_one_image = pose_to_bbox(poses_2d_one_image, image)
             bboxes.append(bboxes_one_image)

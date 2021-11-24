@@ -53,6 +53,10 @@ def create_reid_model():
     return Retriever()
 
 
+def reid_people():
+    pass
+
+
 if __name__ == '__main__':
     model = create_reid_model()
     query = open_image('reid_tests/0001_c1s1_001051_00.jpg')
