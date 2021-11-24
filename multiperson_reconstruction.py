@@ -16,7 +16,7 @@ class CMUPanopticDataset(torch.utils.data.Dataset):
         self.images = {}
         for c in cameras:
             self.images[c] = sorted(
-                [path+'/hdImgs/'+p for p in os.listdir(path+'/hdImgs/'+c)])
+                [path+'/hdImgs/'+c+'/'+p for p in os.listdir(path+'/hdImgs/'+c)])
         self.calib = {}
         for camera in json.load(open(path+'/calibration_'+os.path.split(path)[-1]+'.json'))['cameras']:
             if camera['name'] not in cameras:
