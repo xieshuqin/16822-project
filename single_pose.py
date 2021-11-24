@@ -15,8 +15,8 @@ convert_tensor = transforms.ToTensor()
 
 def estimate_pose(img, xcenter, ycenter, bbox_width, bbox_height):
     img_width, img_height = img.size
-    xmin, xmax = max(xcenter - 0.5 * bbox_width, 0), min(xcenter + 0.5 * bbox_width, img_width)
-    ymin, ymax = max(ycenter - 0.5 * bbox_height, 0), min(ycenter + 0.5 * bbox_height, img_height)
+    xmin, xmax = int(max(xcenter - 0.5 * bbox_width, 0)), int(min(xcenter + 0.5 * bbox_width, img_width))
+    ymin, ymax = int(max(ycenter - 0.5 * bbox_height, 0)), int(min(ycenter + 0.5 * bbox_height, img_height))
     img_crop = img.crop((xmin, ymin, xmax, ymax))
     img_crop = convert_tensor(img_crop)
     joints = predictor.estimate_joints(img_crop, flip=True).cpu().numpy()
@@ -73,3 +73,7 @@ def transform_hg_pose_to_h36m_pose(pose):
     return pose_h36m
 
 
+def undistort(pose, cam):
+    pose = pose.reshape((pose.shape[0], 1, 2))
+    pose = cv2.undistortPoints(pose, cam.camera_matrix, cam.dist_coeffs)
+    return pose.reshape((pose.shape[0], 2))
