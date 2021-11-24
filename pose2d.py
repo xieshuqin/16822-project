@@ -51,8 +51,11 @@ def infer_2d_pose(pose_model, image, visthre=0.0):
 
     pose_preds = get_pose_estimation_prediction(
         cfg, pose_model, image, visthre, transforms=pose_transform)
-
-    return pose_preds
+    poses = []
+    for p in pose_preds:
+        p = [c[:2]for c in p]
+        poses.append(p)
+    return poses
 
 
 def pose_to_bbox(poses, image):

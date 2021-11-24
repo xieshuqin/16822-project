@@ -8,6 +8,7 @@ import os
 from IPython import embed
 import json
 import cv2
+import matplotlib.pyplot as plt
 
 
 class CMUPanopticDataset(torch.utils.data.Dataset):
@@ -34,16 +35,18 @@ class CMUPanopticDataset(torch.utils.data.Dataset):
         M = []
         distCoef = []
         images = []
+        img_paths = []
         for c in self.cameras:
             M.append(self.calib[c]['M'])
             distCoef.append(self.calib[c]['distCoef'])
-            images.append(cv2.imread(self.images[c][index]))
-        return {'camera_matrices': M, 'distCoef': distCoef, 'images': images}
+            img_paths.append(self.images[c][index])
+            images.append(cv2.imread(img_paths[-1]))
+        return {'camera_matrices': M, 'distCoef': distCoef, 'images': images, 'img_paths': img_paths}
 
 
 def main():
     dataset = CMUPanopticDataset(
-        'panoptic-toolbox/171204_pose1_sample', ['00_16', '00_21'])
+        'panoptic-toolbox/160422_ultimatum1_small', ['00_16', '00_18'])
     dataloader = torch.utils.data.DataLoader(dataset)
     pose_model = create_2d_pose_model()
     reid_model = create_reid_model()
@@ -51,15 +54,22 @@ def main():
     for blob_in in dataloader:
         images = [i[0] for i in blob_in['images']]
         camera_matrices = [m[0] for m in blob_in['camera_matrices']]
+        paths = [i[0] for i in blob_in['img_paths']]
 
         # run 2d pose estimation
         poses_2d = []
         bboxes = []
-        for image in images:
+        for image, path in zip(images, paths):
+            image_numpy = image.numpy()
             poses_2d_one_image = infer_2d_pose(
-                pose_model, image.numpy()[:, :, ::-1])
-            embed()
-            exit()
+                pose_model, image.numpy()[:, :, ::-1], visthre=0.1)
+            for pose in poses_2d_one_image:
+                color = np.random.randint(0, 256, 3)
+                for p in pose:
+                    cv2.circle(image_numpy, (int(p[0]), int(
+                        p[1])), radius=8, color=tuple(map(int, color)), thickness=-1)
+                print(len(pose))
+            cv2.imwrite(path+'.pose2d.jpg', image_numpy)
             poses_2d.append(poses_2d_one_image)
             bboxes_one_image = pose_to_bbox(poses_2d_one_image, image)
             bboxes.append(bboxes_one_image)
