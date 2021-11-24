@@ -24,8 +24,9 @@ class CMUPanopticDataset(torch.utils.data.Dataset):
             if camera['name'] not in cameras:
                 continue
             calib = {}
-            calib['M'] = camera['K']@np.concatenate(
-                (camera['R'], camera['t']), 1)
+            calib['K'] = camera['K']
+            calib['R'] = camera['R']
+            calib['t'] = camera['t']
             calib['distCoef'] = np.array(camera['distCoef'])
             self.calib[camera['name']] = calib
 
@@ -33,16 +34,20 @@ class CMUPanopticDataset(torch.utils.data.Dataset):
         return len(next(iter(self.images.values())))
 
     def __getitem__(self, index):
-        M = []
+        K = []
+        R = []
+        t = []
         distCoef = []
         images = []
         img_paths = []
         for c in self.cameras:
-            M.append(self.calib[c]['M'])
+            K.append(self.calib[c]['K'])
+            R.append(self.calib[c]['R'])
+            t.append(self.calib[c]['t'])
             distCoef.append(self.calib[c]['distCoef'])
             img_paths.append(self.images[c][index])
             images.append(cv2.imread(img_paths[-1]))
-        return {'camera_matrices': M, 'distCoef': distCoef, 'images': images, 'img_paths': img_paths}
+        return {'K': K, 'R': R, 't': t, 'distCoef': distCoef, 'images': images, 'img_paths': img_paths}
 
 
 def main():
@@ -54,14 +59,16 @@ def main():
 
     for blob_in in dataloader:
         images = [i[0] for i in blob_in['images']]
-        camera_matrices = [m[0] for m in blob_in['camera_matrices']]
+        K = [m[0] for m in blob_in['K']]
+        R = [m[0] for m in blob_in['R']]
+        t = [m[0] for m in blob_in['t']]
         paths = [i[0] for i in blob_in['img_paths']]
 
         # run 2d pose estimation
         poses_2d = []
         bboxes = []
         for image, path in zip(images, paths):
-            image_numpy = image.numpy()
+            image_numpy = image.numpy().copy()
             poses_2d_one_image = infer_2d_pose(
                 pose_model, image.numpy()[:, :, ::-1], visthre=0.1)
             for pose in poses_2d_one_image:
@@ -77,7 +84,7 @@ def main():
                 cv2.rectangle(
                     image_numpy, box[:2], box[2:], color, thickness=4)
                 cv2.putText(image_numpy, str(idx),
-                            box[:2], cv2.FONT_HERSHEY_SIMPLEX, 2, color)
+                            (box[0]-8, box[1]-8), cv2.FONT_HERSHEY_SIMPLEX, 2, color, thickness=4)
             cv2.imwrite(path+'.pose2d.jpg', image_numpy)
             bboxes.append(bboxes_one_image)
 
@@ -86,14 +93,37 @@ def main():
 
         # run RANSAC and Triangulation to generate 3D pose
         poses_3d = []
-        for one_person_bbox_ids in people_bbox_ids:
-            one_person_poses_2d = [poses_2d[image_id][bbox_id]
-                                   for (image_id, bbox_id) in one_person_bbox_ids]
-            one_person_camera_matrices = [camera_matrices[image_id] for (
+        for person_index, one_person_bbox_ids in enumerate(people_bbox_ids):
+            person_images = [images[image_id]
+                             for (image_id, bbox_id) in one_person_bbox_ids]
+            person_image_paths = [paths[image_id]
+                                  for (image_id, bbox_id) in one_person_bbox_ids]
+            person_boxes = [bboxes[image_id][bbox_id]for(
                 image_id, bbox_id) in one_person_bbox_ids]
-            one_person_poses_3d = ransac_triangulation(
-                one_person_poses_2d, one_person_camera_matrices)
-            poses_3d.append(one_person_poses_3d)
+            person_camera_indices = [i[0]for i in one_person_bbox_ids]
+            person_poses_2d = [poses_2d[image_id][bbox_id]
+                               for (image_id, bbox_id) in one_person_bbox_ids]
+            person_K = [K[image_id]
+                        for (image_id, bbox_id) in one_person_bbox_ids]
+            person_R = [R[image_id]
+                        for (image_id, bbox_id) in one_person_bbox_ids]
+            person_t = [t[image_id]
+                        for (image_id, bbox_id) in one_person_bbox_ids]
+            person_color = tuple(map(int, np.random.randint(0, 256, 3)))
+            for person_image, person_image_path, person_pose_2d, person_box in zip(person_images, person_image_paths, person_poses_2d, person_boxes):
+                person_visualization = person_image.numpy().copy()
+                for p in person_pose_2d:
+                    cv2.circle(person_visualization, (int(p[0]), int(
+                        p[1])), radius=8, color=tuple(map(int, color)), thickness=-1)
+                cv2.rectangle(person_visualization,
+                              person_box[:2], person_box[2:], color, thickness=4)
+                cv2.imwrite(person_image_path+'.person%d.jpg' %
+                            person_index, person_visualization)
+
+            # one_person_poses_3d = ransac_triangulation(
+            #    one_person_poses_2d, one_person_camera_matrices)
+            # poses_3d.append(one_person_poses_3d)
+        break
 
     return poses_3d
 
