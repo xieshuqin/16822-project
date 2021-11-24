@@ -3,6 +3,7 @@ sys.path.append('./deep-person-reid')  # nopep8
 sys.path.append('./deep-person-reid/scripts')  # nopep8
 import torch
 import torchreid
+import cv2
 from torchreid.utils import (
     Logger, check_isfile, set_random_seed, collect_env_info,
     resume_from_checkpoint, load_pretrained_weights, compute_model_complexity
@@ -53,8 +54,20 @@ def create_reid_model():
     return Retriever()
 
 
-def reid_people():
-    pass
+def reid_people(reid_model, images, all_bboxes):
+    features = []
+    for image, boxes in zip(images, all_bboxes):
+        this_features = []
+        for box in boxes:
+            xmin, ymin, xmax, ymax = box
+            cropped = image[ymin:ymax+1, xmin:xmax+1]
+            cropped = cv2.cvtColor(cropped.numpy(), cv2.COLOR_BGR2RGB)
+            cropped = Image.fromarray(cropped)
+            this_features.append(reid_model.forward(cropped))
+        features.append(this_features)
+    for i in range(len(features[0])):
+        for j in range(len(features[1])):
+            print(i, j, features[0][i]@features[1][j])
 
 
 if __name__ == '__main__':

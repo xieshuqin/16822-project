@@ -59,7 +59,7 @@ def infer_2d_pose(pose_model, image, visthre=0.0):
 
 
 def pose_to_bbox(poses, image):
-    scale = 1.2
+    scale = 1.5
     h, w, c = image.shape
     bboxes = []
     for pose in poses:
@@ -75,7 +75,7 @@ def pose_to_bbox(poses, image):
                          0), min(xcenter + 0.5 * scale * width, w - 1)
         ymin, ymax = max(ycenter - 0.5 * scale * height,
                          0), min(ycenter + 0.5 * scale * height, h - 1)
-        bboxes.append((xmin, ymin, xmax, ymax))
+        bboxes.append((int(xmin), int(ymin), int(xmax), int(ymax)))
     return bboxes
 
 

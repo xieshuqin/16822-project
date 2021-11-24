@@ -17,7 +17,8 @@ class CMUPanopticDataset(torch.utils.data.Dataset):
         self.images = {}
         for c in cameras:
             self.images[c] = sorted(
-                [path+'/hdImgs/'+c+'/'+p for p in os.listdir(path+'/hdImgs/'+c)])
+                [path+'/hdImgs/'+c+'/'+p for p in os.listdir(path+'/hdImgs/'+c) if '.jpg.' not in p])
+        assert len({len(self.images[c]) for c in cameras}) == 1
         self.calib = {}
         for camera in json.load(open(path+'/calibration_'+os.path.split(path)[-1]+'.json'))['cameras']:
             if camera['name'] not in cameras:
@@ -45,8 +46,8 @@ class CMUPanopticDataset(torch.utils.data.Dataset):
 
 
 def main():
-    dataset = CMUPanopticDataset(
-        'panoptic-toolbox/160422_ultimatum1_small', ['00_16', '00_18'])
+    dataset = CMUPanopticDataset('160422_ultimatum1_small', [
+                                 '00_16', '00_18', '00_19'])
     dataloader = torch.utils.data.DataLoader(dataset)
     pose_model = create_2d_pose_model()
     reid_model = create_reid_model()
@@ -68,10 +69,16 @@ def main():
                 for p in pose:
                     cv2.circle(image_numpy, (int(p[0]), int(
                         p[1])), radius=8, color=tuple(map(int, color)), thickness=-1)
-                print(len(pose))
-            cv2.imwrite(path+'.pose2d.jpg', image_numpy)
             poses_2d.append(poses_2d_one_image)
             bboxes_one_image = pose_to_bbox(poses_2d_one_image, image)
+            for idx, box in enumerate(bboxes_one_image):
+                color = np.random.randint(0, 256, 3)
+                color = tuple(map(int, color))
+                cv2.rectangle(
+                    image_numpy, box[:2], box[2:], color, thickness=4)
+                cv2.putText(image_numpy, str(idx),
+                            box[:2], cv2.FONT_HERSHEY_SIMPLEX, 2, color)
+            cv2.imwrite(path+'.pose2d.jpg', image_numpy)
             bboxes.append(bboxes_one_image)
 
         # run reid
