@@ -157,7 +157,10 @@ class SmoothL1JointLocationLoss(nn.Module):
 
         _assert_no_grad(gt_joints)
         _assert_no_grad(gt_joints_vis)
-        return weighted_smooth_l1_loss(pred_jts, gt_joints, gt_joints_vis, self.size_average, self.norm)
+        
+        #import pdb; pdb.set_trace()
+        #return weighted_smooth_l1_loss(pred_jts, gt_joints, gt_joints_vis, self.size_average, self.norm)
+        return weighted_smooth_l1_loss(pred_jts, gt_joints, gt_joints_vis[:,:48], self.size_average, self.norm) #Hand modify to take only 48(i.e. 16 joints x3) points - prevent re-generation
 
 def get_loss_func(config):
     if config.loss_type == 'L1':

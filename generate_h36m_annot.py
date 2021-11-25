@@ -11,7 +11,7 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
-from EpipolarPose.lib.utils import prep_h36m
+from lib.utils import prep_h36m
 
 # split our dataset image name lists into four cameras
 # example name: S7_Walking_1.54138969_000129.jpg
@@ -41,7 +41,7 @@ print('Sanity check done')
 
 # for each image in the original pickle, find the nearest available image
 # on our current available images, then run our approach to generate label.
-with open('EpipolarPose/data/h36m/annot/train-fs.pkl', 'rb') as f:
+with open('data/h36m/annot/train-fs.pkl', 'rb') as f:
     gt_anno = pickle.load(f)
 
 # print seq names for gt anno and the available camera seqs
@@ -89,8 +89,9 @@ for i in tqdm(range(num_annotation)):
         ann = gt_anno[camera_id][i]
         pose2d = single_pose.estimate_pose(img, ann['center_x'], ann['center_y'], ann['width'], ann['height'])
         pose2d_undistorted = single_pose.undistort(pose2d, gt_anno[camera_id][i]['cam'])
-        pose2d_h36m = single_pose.transform_hg_pose_to_h36m_pose(pose2d_undistorted)
-        poses2d.append(pose2d_h36m)
+        #pose2d_h36m = single_pose.transform_hg_pose_to_h36m_pose(pose2d_undistorted)
+        #poses2d.append(pose2d_h36m)
+        poses2d.append(pose2d_undistorted)
         cam_matrices.append(ann['cam'].projection_matrix)
         imgs.append(img)
     # RANSAC triangulation
@@ -100,7 +101,10 @@ for i in tqdm(range(num_annotation)):
     for camera_id in range(1, 5):
         R, T, f, c, k, p, cam_name = gt_anno[camera_id][i]['cam'].cam_params
         rect2d_l, rect2d_r, rect2d_t, rect2d_b, pt_2d, pt_3d, vis, pelvis3d = \
-            prep_h36m.from_worldjt_to_imagejt(17, R, pose3d, T, f, c, 2000, 2000, False)
+            prep_h36m.from_worldjt_to_imagejt(16, R, pose3d, T, f, c, 2000, 2000, False)
+            #prep_h36m.from_worldjt_to_imagejt(17, R, pose3d, T, f, c, 2000, 2000, False)
+
+        #import pdb; pdb.set_trace()
         new_anno = copy.deepcopy(gt_anno[camera_id][i])
         new_anno['image'] = f'images/{gt_imgname[1]}/{seq_name}.{cam_name}_{closest_frame_id:06d}.jpg'
         new_anno['joints_3d'] = pt_2d
@@ -108,5 +112,5 @@ for i in tqdm(range(num_annotation)):
         new_anno['pelvis'] = pelvis3d
         our_anno[camera_id].append(new_anno)
 
-with open('train-our-ss.pkl', 'wb') as f:
+with open('train-our-ss-mpii_3.pkl', 'wb') as f:
     pickle.dump(our_anno, f, protocol=4)

@@ -13,7 +13,7 @@ DATASET:
   DATASET: h36m
   ROOT: '/home/ubuntu/16822-project/data/h36m/'
   TEST_SET: valid
-  TRAIN_SET: train-our-ss
+  TRAIN_SET: train-our-ss-mpii_2
   FLIP: false
   TRI: false
   MPII_ORDER: true
@@ -26,6 +26,7 @@ MODEL:
   PRETRAINED: '/home/ubuntu/16822-project/EpipolarPose/mpii_integral.pth.tar'
   RESUME: ''
   NUM_JOINTS: 16
+  #NUM_JOINTS: 17
   VOLUME: true
   EXTRA:
     FINAL_CONV_KERNEL: 1
