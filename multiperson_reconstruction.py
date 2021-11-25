@@ -44,7 +44,7 @@ class CMUPanopticDataset(torch.utils.data.Dataset):
             K.append(np.array(self.calib[c]['K']))
             R.append(np.array(self.calib[c]['R']))
             t.append(np.array(self.calib[c]['t']))
-            distCoef.append(self.calib[c]['distCoef'])
+            distCoef.append(np.array(self.calib[c]['distCoef']))
             img_paths.append(self.images[c][index])
             images.append(cv2.imread(img_paths[-1]))
         return {'K': K, 'R': R, 't': t, 'distCoef': distCoef, 'images': images, 'img_paths': img_paths}
@@ -118,7 +118,7 @@ def visualize_all_frames(poses_3d):
 
 def main():
     dataset = CMUPanopticDataset('160422_ultimatum1_small', [
-                                 '00_16', '00_18', '00_19'])
+                                 '00_16', '00_18', '00_19', '00_25'])
     dataloader = torch.utils.data.DataLoader(dataset)
     pose_model = create_2d_pose_model()
     reid_model = create_reid_model()
@@ -154,7 +154,7 @@ def main():
             cv2.imwrite(path+'.pose2d.jpg', image_numpy)
             bboxes.append(bboxes_one_image)
         # run reid
-        people_bbox_ids = reid_people(reid_model, images, bboxes)
+        people_bbox_ids = reid_people(reid_model, images, bboxes, thres=0.6)
         # run RANSAC and Triangulation to generate 3D pose
         poses_3d = []
         for person_index, one_person_bbox_ids in enumerate(people_bbox_ids):
@@ -173,7 +173,7 @@ def main():
                         for (image_id, bbox_id) in one_person_bbox_ids]
             person_t = [t[image_id]
                         for (image_id, bbox_id) in one_person_bbox_ids]
-            person_distCoef = [t[image_id]
+            person_distCoef = [distCoef[image_id]
                                for (image_id, bbox_id) in one_person_bbox_ids]
             person_color = tuple(map(int, np.random.randint(0, 256, 3)))
             person_color_reprojection = tuple(

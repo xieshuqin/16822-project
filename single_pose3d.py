@@ -1,5 +1,9 @@
 import numpy as np
 from IPython import embed
+import cv2
+import sys
+sys.path.append('panoptic-toolbox/python')  # nopep8
+from panutils import projectPoints
 
 
 def ransac_triangulation(person_poses_2d, person_K, person_R, person_t, person_distCoef):
@@ -16,6 +20,8 @@ def ransac_triangulation(person_poses_2d, person_K, person_R, person_t, person_d
         distCoef = distCoef.numpy()
         M = K@np.concatenate((R, t), 1)
         for i, p in enumerate(pose_2d):
+            p = K@np.concatenate((cv2.undistortPoints(p,
+                                                      K, distCoef)[0, 0], [1]))
             constraints[i] += make_constraints(M, p)
     pose_3d = []
     error = []
@@ -29,11 +35,11 @@ def ransac_triangulation(person_poses_2d, person_K, person_R, person_t, person_d
         R = R.numpy()
         t = t.numpy()
         distCoef = distCoef.numpy()
-        M = K@np.concatenate((R, t), 1)
         r = []
         for P in pose_3d:
-            p = M@np.concatenate((P, [1]))
-            r.append((p[0]/p[-1], p[1]/p[-1]))
+            p = projectPoints(np.matrix(P[:, None]), np.matrix(
+                K), np.matrix(R), t.reshape((3, 1)), distCoef)
+            r.append((p[0], p[1]))
         reprojection.append(r)
     print('mean error:', np.mean(error))
     return pose_3d, reprojection
