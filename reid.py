@@ -54,7 +54,7 @@ def create_reid_model():
     return Retriever()
 
 
-def reid_people(reid_model, images, all_bboxes):
+def reid_people(reid_model, images, all_bboxes, thres):
     features = []
     for image, boxes in zip(images, all_bboxes):
         this_features = []
@@ -83,7 +83,7 @@ def reid_people(reid_model, images, all_bboxes):
             if y not in vis:
                 get_connected_component(y, vis)
     for s, x, y in scores:
-        if s < 0.7:
+        if s < thres:
             break
         print('possible match', x, y, s)
         comp_x = set()
