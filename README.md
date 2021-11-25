@@ -17,3 +17,10 @@ popd
 Follow the steps in https://github.com/mkocabas/EpipolarPose to setup the environment and the related data.
 pip install h5py
 ```
+
+## Multiperson
+```
+1. Download pose_dekr_hrnetw32_coco.pth from https://mailustceducn-my.sharepoint.com/:f:/g/personal/aa397601_mail_ustc_edu_cn/EmoNwNpq4L1FgUsC9KbWezABSotd3BGOlcWCdkBi91l50g?e=HWuluh and put it into ./dekr_models
+2. python multiperson_reconstruction.py
+3. Note that a small subset of CMU Panoptic Dataset is included in this repo. Feel free to follow the instructions in ./panoptic-toolbox to get more data.
+```
