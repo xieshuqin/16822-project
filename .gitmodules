@@ -1,0 +1,15 @@
+[submodule "DEKR"]
+	path = DEKR
+	url = git@github.com:HRNet/DEKR.git
+[submodule "EpipolarPose"]
+	path = EpipolarPose
+	url = git@github.com:mkocabas/EpipolarPose.git
+[submodule "CrowdPose"]
+	path = CrowdPose
+	url = git@github.com:Jeff-sjtu/CrowdPose.git
+[submodule "deep-person-reid"]
+	path = deep-person-reid
+	url = git@github.com:KaiyangZhou/deep-person-reid.git
+[submodule "panoptic-toolbox"]
+	path = panoptic-toolbox
+	url = git@github.com:CMU-Perceptual-Computing-Lab/panoptic-toolbox.git

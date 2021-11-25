@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 opencv-python
 torch
 torchvision
@@ -7,3 +8,8 @@ scikit-image
 matplotlib
 scipy
 scikit-learn
+=======
+json_tricks
+pycocotools
+gdown
+>>>>>>> 1c06462cf99cda671dd4182f21f6ad96e5b16423

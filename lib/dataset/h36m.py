@@ -51,9 +51,29 @@ class H36M_Integral(JointsIntegralDataset):
 
 
     def get_data(self, the_db):
-
         image_file = os.path.join(self.root, the_db['image'])
 
+        #Overwrite to this part and adjust to naming convention to the dataset we have
+        if 'action' in the_db: #i.e. validation data, need to handle the file path as the valid.pkl is not modified
+            image_file = the_db['image']
+            subject = image_file.split("/")[1]
+            frame = image_file.split("/")[-1]
+            new_file_name = subject + "_" + image_file.split("/")[-2] + "_" + image_file.split("/")[-1]
+            image_file = "images/" + subject + "/" + new_file_name
+            #Special treatment to S1 data
+            SEQ_NAME_MAPPING = {
+                'S1_Photo': 'S1_TakingPhoto',
+                'S1_Photo_1': 'S1_TakingPhoto_1',
+                'S1_WalkDog': 'S1_WalkingDog',
+                'S1_WalkDog_1': 'S1_WalkingDog_1'
+            }
+            #Replace the name to match the dataset
+            for name in SEQ_NAME_MAPPING:
+                if name in image_file:
+                    image_file.replace(name, SEQ_NAME_MAPPING[name])
+
+
+            image_file = os.path.join(self.root, image_file)
 
         cam = the_db['cam']
 
