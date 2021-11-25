@@ -72,14 +72,20 @@ connections = [
 
 def draw_pose_2d(person_visualization, person_pose_2d, person_color):
     for p in person_pose_2d:
-        cv2.circle(person_visualization, (int(p[0]), int(
-            p[1])), radius=8, color=person_color, thickness=-1)
+        try:
+            cv2.circle(person_visualization, (int(p[0]), int(
+                p[1])), radius=8, color=person_color, thickness=-1)
+        except:
+            pass
     for p, q in connections:
-        x1 = int(person_pose_2d[p][0])
-        y1 = int(person_pose_2d[p][1])
-        x2 = int(person_pose_2d[q][0])
-        y2 = int(person_pose_2d[q][1])
-        cv2.line(person_visualization, (x1, y1), (x2, y2), person_color, 4)
+        try:
+            x1 = int(person_pose_2d[p][0])
+            y1 = int(person_pose_2d[p][1])
+            x2 = int(person_pose_2d[q][0])
+            y2 = int(person_pose_2d[q][1])
+            cv2.line(person_visualization, (x1, y1), (x2, y2), person_color, 4)
+        except:
+            pass
 
 
 def visualize_single_frame(poses_3d):
@@ -88,9 +94,12 @@ def visualize_single_frame(poses_3d):
     for pose_3d in poses_3d:
         color = tuple(map(float, np.random.uniform(0, 1, 3)))
         for i, j in connections:
-            x, y, z = [np.array([pose_3d[i][c], pose_3d[j][c]])
-                       for c in range(3)]
-            ax.plot(x, y, z, lw=2, c=color)
+            try:
+                x, y, z = [np.array([pose_3d[i][c], pose_3d[j][c]])
+                           for c in range(3)]
+                ax.plot(x, y, z, lw=2, c=color)
+            except:
+                pass
     ax.set_xlim3d(-200, 200)
     ax.set_ylim3d(-200, 200)
     ax.set_zlim3d(-200, 200)
@@ -109,9 +118,12 @@ def visualize_all_frames(poses_3d):
             ax.clear()
             for pose_3d in frame_poses_3d:
                 for i, j in connections:
-                    x, y, z = [np.array([pose_3d[i][c], pose_3d[j][c]])
-                               for c in range(3)]
-                    ax.plot(x, y, z, lw=2, c=color)
+                    try:
+                        x, y, z = [np.array([pose_3d[i][c], pose_3d[j][c]])
+                                   for c in range(3)]
+                        ax.plot(x, y, z, lw=2, c=color)
+                    except:
+                        pass
             plt.draw()
             plt.pause(1)
 
@@ -193,10 +205,10 @@ def main():
             poses_3d.append(person_pose_3d)
         all_poses_3d.append(poses_3d)
         visualize_single_frame(poses_3d)
-        if blob_index >= 31:
+        if blob_index >= 0:
             break
         print('current at frame', blob_index)
-    visualize_all_frames(all_poses_3d)
+    # visualize_all_frames(all_poses_3d)
 
 
 if __name__ == '__main__':
