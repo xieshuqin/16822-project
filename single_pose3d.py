@@ -39,7 +39,7 @@ def reprojection_error(task, P):
     return error
 
 
-def ransac_triangulation(person_poses_2d, person_K, person_R, person_t, person_distCoef, num_iter=256, thres=512):
+def ransac_triangulation(person_poses_2d, person_K, person_R, person_t, person_distCoef, num_iter=256, thres=128):
     tasks = [[]for i in range(len(person_poses_2d[0]))]
     for pose_2d, K, R, t, distCoef in zip(person_poses_2d, person_K, person_R, person_t, person_distCoef):
         K = K.numpy()
@@ -54,16 +54,20 @@ def ransac_triangulation(person_poses_2d, person_K, person_R, person_t, person_d
             reprojection_error(task, solve_task(task))))
         best_P = None
         best_cnt = None
+        best_error = None
         for i in range(num_iter):
             sample = random.sample(task, 2)
             this_P = solve_task(sample)
             this_cnt = (np.array(reprojection_error(
                 task, this_P)) < thres).sum()
-            if best_cnt is None or this_cnt > best_cnt:
+            this_error = np.mean([t for t in reprojection_error(
+                task, this_P) if t < thres])
+            if best_cnt is None or this_cnt > best_cnt or (this_cnt == best_cnt and this_error < best_error):
                 best_cnt = this_cnt
                 best_P = this_P
+                best_error = this_error
         best_task = [task[i]for i in np.argwhere(
-            np.array(reprojection_error(task, this_P)) < thres)[:, 0]]
+            np.array(reprojection_error(task, best_P)) < thres)[:, 0]]
         print(len(task), len(best_task))
         if len(best_task) < 2:
             print('oops')
