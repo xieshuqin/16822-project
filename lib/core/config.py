@@ -44,7 +44,7 @@ config.MODEL.NAME = 'pose3d_resnet'
 config.MODEL.INIT_WEIGHTS = True
 config.MODEL.PRETRAINED = ''
 config.MODEL.RESUME = ''
-config.MODEL.NUM_JOINTS = 17
+config.MODEL.NUM_JOINTS = 16
 config.MODEL.IMAGE_SIZE = [256, 256]  # width * height, ex: 192 * 256
 config.MODEL.DEPTH_RES = 64
 config.MODEL.VOLUME = True
@@ -69,7 +69,8 @@ config.DATASET.DATA_FORMAT = 'jpg'
 config.DATASET.HYBRID_JOINTS_TYPE = ''
 config.DATASET.SELECT_DATA = False
 config.DATASET.TRI = False
-config.DATASET.MPII_ORDER = False
+#config.DATASET.MPII_ORDER = False
+config.DATASET.MPII_ORDER = True
 
 # H36M related params
 config.DATASET.TRAIN_FRAME = 32
