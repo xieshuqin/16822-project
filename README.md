@@ -16,7 +16,7 @@ popd
 ```
 ### EpipolarPose
 ```
-Follow the steps in https://github.com/mkocabas/EpipolarPose to setup the environment and the related data.
+1. Follow the steps in https://github.com/mkocabas/EpipolarPose to setup the environment and the related data.
 ```
 ### Multi-person Pipeline
 ```
