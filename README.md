@@ -18,7 +18,9 @@ popd
 3. Note that a small subset of CMU Panoptic Dataset is included in this repo. Feel free to follow the instructions in ./panoptic-toolbox to get more data.
 ```
 ## Code We Reuse:
-### 3D single person pose estimation
-We use code from https://github.com/mkocabas/EpipolarPose, thanks the authors for publishing their code.
-### 2D multi-person pose estimation
-We use code from https://github.com/HRNet/DEKR for 2d pose estimation, thanks the authors for sharing the code. 
+### 3D Single Person Pose Estimation Training Pipeline
+We use code from https://github.com/mkocabas/EpipolarPose. Thanks the authors for publishing their code.
+### 2D Multi-Person Pose Estimator
+We use code from https://github.com/HRNet/DEKR for 2d pose estimation. Thanks the authors for sharing the code.
+### Person Re-Id
+We use code from https://github.com/KaiyangZhou/deep-person-reid for person re-id. Thank the authors for publishing their code.
