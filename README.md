@@ -1,9 +1,3 @@
-## Code We Reuse:
-### 3D single person pose estimation
-We use code from https://github.com/mkocabas/EpipolarPose, thanks the authors for publishing their code.
-### 2D multi-person pose estimation
-We use code from https://github.com/HRNet/DEKR for 2d pose estimation, thanks the authors for sharing the code. 
-
 ## Installation
 ### Common
 ```
@@ -23,3 +17,8 @@ popd
 2. python multiperson_reconstruction.py
 3. Note that a small subset of CMU Panoptic Dataset is included in this repo. Feel free to follow the instructions in ./panoptic-toolbox to get more data.
 ```
+## Code We Reuse:
+### 3D single person pose estimation
+We use code from https://github.com/mkocabas/EpipolarPose, thanks the authors for publishing their code.
+### 2D multi-person pose estimation
+We use code from https://github.com/HRNet/DEKR for 2d pose estimation, thanks the authors for sharing the code. 
