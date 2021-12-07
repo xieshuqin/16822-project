@@ -11,3 +11,4 @@ json_tricks
 pycocotools
 gdown
 h5py
+yacs
