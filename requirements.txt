@@ -13,3 +13,4 @@ gdown
 h5py
 yacs
 tensorboard
+IPython
