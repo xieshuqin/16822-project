@@ -24,3 +24,5 @@ We use code from https://github.com/mkocabas/EpipolarPose. Thanks the authors fo
 We use code from https://github.com/HRNet/DEKR for 2d pose estimation. Thanks the authors for sharing the code.
 ### Person Re-Id
 We use code from https://github.com/KaiyangZhou/deep-person-reid for person re-id. Thank the authors for publishing their code.
+### PanopticStudio Toolbox
+We use code from https://github.com/CMU-Perceptual-Computing-Lab/panoptic-toolbox to retrieve CMU Panoptic Dataset. We thank the authors for their code.
