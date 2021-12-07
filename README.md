@@ -1,6 +1,7 @@
 ## Installation
-### Common (Please use Python 3.)
+### Common
 ```
+# Please use Python 3.
 git clone --recurse-submodules git@github.com:xieshuqin/16822-project.git
 pip install -r requirements.txt
 pushd CrowdPose/crowdpose-api/PythonAPI
