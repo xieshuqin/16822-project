@@ -7,6 +7,7 @@ pip install -r requirements.txt
 pushd CrowdPose/crowdpose-api/PythonAPI
 python setup.py install --user
 popd
+sudo apt-get install python3-tk
 ```
 ### EpipolarPose
 ```
