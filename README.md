@@ -6,7 +6,7 @@ git clone --recurse-submodules git@github.com:xieshuqin/16822-project.git
 cd 16822-project
 pip install -r requirements.txt
 pushd CrowdPose/crowdpose-api/PythonAPI
-python setup.py install --user
+python setup.py install
 popd
 sudo apt-get install python3-tk
 ```
