@@ -12,3 +12,4 @@ pycocotools
 gdown
 h5py
 yacs
+tensorboard
